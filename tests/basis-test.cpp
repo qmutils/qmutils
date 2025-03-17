@@ -8,7 +8,8 @@ namespace {
 class BasisTest : public ::testing::Test {
  protected:
   static Basis::operators_type create_operators(
-      std::initializer_list<std::pair<Operator::Spin, uint8_t>> ops) {
+      std::initializer_list<std::pair<Operator::Spin, Operator::int_type>>
+          ops) {
     Basis::operators_type result;
     for (const auto& [spin, orbital] : ops) {
       result.push_back(Operator::Fermion::creation(spin, orbital));
@@ -100,7 +101,8 @@ TEST_F(BasisTest, EqualityOperator) {
 class FermionicBasisSzTest : public ::testing::Test {
  protected:
   static Basis::operators_type create_operators(
-      std::initializer_list<std::pair<Operator::Spin, uint8_t>> ops) {
+      std::initializer_list<std::pair<Operator::Spin, Operator::int_type>>
+          ops) {
     Basis::operators_type result;
     for (const auto& [spin, orbital] : ops) {
       result.push_back(Operator::Fermion::creation(spin, orbital));

@@ -12,10 +12,10 @@ class NormalOrderTest : public ::testing::Test {
   NormalOrderer orderer;
 
   // Helper function to create operators
-  static Operator c(Operator::Spin spin, uint8_t orbital) {
+  static Operator c(Operator::Spin spin, Operator::int_type orbital) {
     return Operator::Fermion::creation(spin, orbital);
   }
-  static Operator a(Operator::Spin spin, uint8_t orbital) {
+  static Operator a(Operator::Spin spin, Operator::int_type orbital) {
     return Operator::Fermion::annihilation(spin, orbital);
   }
 };

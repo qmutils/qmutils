@@ -13,11 +13,11 @@ class ExpressionTest : public ::testing::Test {
   Expression::coefficient_type coeff1{1.0f, 0.0f};
   Expression::coefficient_type coeff2{0.0f, 2.0f};
 
-  static Operator c(Operator::Spin spin, uint8_t orbital) {
+  static Operator c(Operator::Spin spin, Operator::int_type orbital) {
     return Operator::Fermion::creation(spin, orbital);
   }
 
-  static Operator a(Operator::Spin spin, uint8_t orbital) {
+  static Operator a(Operator::Spin spin, Operator::int_type orbital) {
     return Operator::Fermion::annihilation(spin, orbital);
   }
 };

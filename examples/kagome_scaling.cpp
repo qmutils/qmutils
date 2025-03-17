@@ -31,16 +31,14 @@ class KagomeModel {
   Expression m_hamiltonian;
 
   Term density_density_interaction(size_t site) const {
-    auto s = Operator::Spin::Up;
     return 0.5f * m_U *
-           Term({Operator::Boson::creation(s, site),
-                 Operator::Boson::creation(s, site),
-                 Operator::Boson::annihilation(s, site),
-                 Operator::Boson::annihilation(s, site)});
+           Term({Operator::Boson::creation(site),
+                 Operator::Boson::creation(site),
+                 Operator::Boson::annihilation(site),
+                 Operator::Boson::annihilation(site)});
   }
 
   void construct_hamiltonian() {
-    auto s = Operator::Spin::Up;
     const size_t lx = m_index.dimension(0);
     const size_t ly = m_index.dimension(1);
 
@@ -55,16 +53,16 @@ class KagomeModel {
         size_t next_C_x_y_site =
             m_index.to_orbital({(i + 1) % lx, (j + ly - 1) % ly, 2});
 
-        m_hamiltonian += m_t1 * Expression::Boson::hopping(A_site, B_site, s);
-        m_hamiltonian += m_t1 * Expression::Boson::hopping(B_site, C_site, s);
-        m_hamiltonian += m_t1 * Expression::Boson::hopping(C_site, A_site, s);
+        m_hamiltonian += m_t1 * Expression::Boson::hopping(A_site, B_site);
+        m_hamiltonian += m_t1 * Expression::Boson::hopping(B_site, C_site);
+        m_hamiltonian += m_t1 * Expression::Boson::hopping(C_site, A_site);
 
         m_hamiltonian +=
-            m_t1 * Expression::Boson::hopping(B_site, next_A_x_site, s);
+            m_t1 * Expression::Boson::hopping(B_site, next_A_x_site);
         m_hamiltonian +=
-            m_t1 * Expression::Boson::hopping(C_site, next_A_y_site, s);
+            m_t1 * Expression::Boson::hopping(C_site, next_A_y_site);
         m_hamiltonian +=
-            m_t1 * Expression::Boson::hopping(B_site, next_C_x_y_site, s);
+            m_t1 * Expression::Boson::hopping(B_site, next_C_x_y_site);
 
         m_hamiltonian += density_density_interaction(A_site);
         m_hamiltonian += density_density_interaction(B_site);

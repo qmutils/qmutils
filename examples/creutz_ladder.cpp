@@ -29,8 +29,6 @@ class CreutzLadderModel {
   Expression m_hamiltonian;
 
   void construct_hamiltonian() {
-    auto s = Operator::Spin::Up;
-
     for (size_t i = 0; i < L; ++i) {
       size_t A_site = m_index.to_orbital(i, 0);
       size_t B_site = m_index.to_orbital(i, 1);
@@ -38,17 +36,17 @@ class CreutzLadderModel {
       size_t next_A_site = m_index.to_orbital((i + 1) % L, 0);
       size_t next_B_site = m_index.to_orbital((i + 1) % L, 1);
 
-      m_hamiltonian += m_J * Expression::Boson::hopping(A_site, next_B_site, s);
-      m_hamiltonian += m_J * Expression::Boson::hopping(B_site, next_A_site, s);
+      m_hamiltonian += m_J * Expression::Boson::hopping(A_site, next_B_site);
+      m_hamiltonian += m_J * Expression::Boson::hopping(B_site, next_A_site);
 
       std::complex<float> phase(std::cos(m_theta), std::sin(m_theta));
 
-      Term A_A = m_J * phase * Term::Boson::one_body(s, A_site, s, next_A_site);
+      Term A_A = m_J * phase * Term::Boson::one_body(A_site, next_A_site);
       m_hamiltonian += A_A;
       m_hamiltonian += A_A.adjoint();
 
-      Term B_B = m_J * std::conj(phase) *
-                 Term::Boson::one_body(s, B_site, s, next_B_site);
+      Term B_B =
+          m_J * std::conj(phase) * Term::Boson::one_body(B_site, next_B_site);
       m_hamiltonian += B_B;
       m_hamiltonian += B_B.adjoint();
     }
@@ -58,16 +56,16 @@ class CreutzLadderModel {
       size_t B_site = m_index.to_orbital(i, 1);
 
       m_hamiltonian += 0.5f * m_U *
-                       Term({Operator::Boson::creation(s, A_site),
-                             Operator::Boson::creation(s, A_site),
-                             Operator::Boson::annihilation(s, A_site),
-                             Operator::Boson::annihilation(s, A_site)});
+                       Term({Operator::Boson::creation(A_site),
+                             Operator::Boson::creation(A_site),
+                             Operator::Boson::annihilation(A_site),
+                             Operator::Boson::annihilation(A_site)});
 
       m_hamiltonian += 0.5f * m_U *
-                       Term({Operator::Boson::creation(s, B_site),
-                             Operator::Boson::creation(s, B_site),
-                             Operator::Boson::annihilation(s, B_site),
-                             Operator::Boson::annihilation(s, B_site)});
+                       Term({Operator::Boson::creation(B_site),
+                             Operator::Boson::creation(B_site),
+                             Operator::Boson::annihilation(B_site),
+                             Operator::Boson::annihilation(B_site)});
     }
   }
 };
@@ -83,7 +81,7 @@ int main() {
 
   std::cout << "# Basis size: " << basis.size() << std::endl;
 
-  QMUTILS_ASSERT(model.hamiltonian().is_purely(Operator::Statistics::Bosonic));
+  QMUTILS_ASSERT(model.hamiltonian().is_purely(Operator::Statistics::Boson));
 
   auto H_matrix =
       compute_matrix_elements<arma::cx_fmat>(basis, model.hamiltonian());

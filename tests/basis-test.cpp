@@ -11,7 +11,7 @@ class BasisTest : public ::testing::Test {
       std::initializer_list<std::pair<Operator::Spin, uint8_t>> ops) {
     Basis::operators_type result;
     for (const auto& [spin, orbital] : ops) {
-      result.push_back(Operator::creation(spin, orbital));
+      result.push_back(Operator::Fermion::creation(spin, orbital));
     }
     return result;
   }
@@ -103,7 +103,7 @@ class FermionicBasisSzTest : public ::testing::Test {
       std::initializer_list<std::pair<Operator::Spin, uint8_t>> ops) {
     Basis::operators_type result;
     for (const auto& [spin, orbital] : ops) {
-      result.push_back(Operator::creation(spin, orbital));
+      result.push_back(Operator::Fermion::creation(spin, orbital));
     }
     return result;
   }

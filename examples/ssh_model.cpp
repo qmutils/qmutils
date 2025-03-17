@@ -27,8 +27,10 @@ class SSHModel {
       Expression term;
       size_t orbital1 = m_index.to_orbital(unit_cell_1, size_1);
       size_t orbital2 = m_index.to_orbital(unit_cell_2, site_2);
-      term += t * Expression::hopping(orbital1, orbital2, Operator::Spin::Up);
-      term += t * Expression::hopping(orbital1, orbital2, Operator::Spin::Down);
+      term += t * Expression::Fermion::hopping(orbital1, orbital2,
+                                               Operator::Spin::Up);
+      term += t * Expression::Fermion::hopping(orbital1, orbital2,
+                                               Operator::Spin::Down);
       return term;
     };
 
@@ -71,8 +73,8 @@ Expression fourier_transform_operator(const Operator& op,
         0.0f, -type_sign * factor * static_cast<float>(k * unit_cell));
     coefficient = std::exp(coefficient) / std::sqrt(static_cast<float>(L));
 
-    Operator transformed_op(op.type(), op.spin(),
-                            lattice.to_orbital(k, sublattice));
+    Operator transformed_op = Operator::Fermion::make(
+        op.type(), op.spin(), lattice.to_orbital(k, sublattice));
     result += Term(coefficient, {transformed_op});
   }
 
@@ -92,7 +94,8 @@ static void print_hamiltonian(const Expression& hamiltonian,
 static Expression transform_operator_to_band_basis(
     const Operator& op, const arma::cx_fmat& eigenvectors, const Basis& basis) {
   Expression result;
-  Operator needle(Operator::Type::Creation, op.spin(), op.orbital());
+  Operator needle = Operator::Fermion::make(Operator::Type::Creation, op.spin(),
+                                            op.orbital());
   size_t i = static_cast<size_t>(basis.index_of({needle}));
   for (size_t k = 0; k < basis.size(); ++k) {
     std::complex<float> coeff = (op.type() == Operator::Type::Annihilation)
@@ -101,7 +104,7 @@ static Expression transform_operator_to_band_basis(
     // Get spin and orbital indices from basis index k
     Operator::Spin spin = basis.at(k)[0].spin();
     size_t orbital = basis.at(k)[0].orbital();
-    Term new_term(coeff, {Operator(op.type(), spin, orbital)});
+    Term new_term(coeff, {Operator::Fermion::make(op.type(), spin, orbital)});
     result += new_term;
   }
   return result;

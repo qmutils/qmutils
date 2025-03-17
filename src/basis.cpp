@@ -11,7 +11,7 @@ void BasisBase::generate_basis() {
 FermionicBasis::FermionicBasis(size_t orbitals, size_t particles,
                                std::optional<int> required_sz)
     : BasisBase(orbitals, particles) {
-  QMUTILS_ASSERT(orbitals <= Operator::max_orbital_size());
+  QMUTILS_ASSERT(orbitals <= Operator::Fermion::max_orbital_size());
   QMUTILS_ASSERT(particles <= 2 * orbitals);
 
   if (required_sz.has_value()) {
@@ -119,13 +119,10 @@ void BosonicBasis::generate_combinations(operators_type& current,
   }
 
   for (size_t i = first_orbital; i < m_orbitals; i++) {
-    for (int spin_index = 0; spin_index < 1; ++spin_index) {
-      Operator::Spin spin = static_cast<Operator::Spin>(spin_index);
-      if (current.empty() || current.back().orbital() <= i) {
-        current.push_back(Operator::Boson::creation(spin, i));
-        generate_combinations(current, i, depth + 1);
-        current.pop_back();
-      }
+    if (current.empty() || current.back().orbital() <= i) {
+      current.push_back(Operator::Boson::creation(i));
+      generate_combinations(current, i, depth + 1);
+      current.pop_back();
     }
   }
 }
@@ -143,7 +140,7 @@ void HardCoreBosonicBasis::generate_combinations(operators_type& current,
 
   for (size_t i = first_orbital; i < m_orbitals; i++) {
     if (current.empty() || current.back().orbital() < i) {
-      current.push_back(Operator::Boson::creation(Operator::Spin::Up, i));
+      current.push_back(Operator::Boson::creation(i));
       generate_combinations(current, i, depth + 1);
       current.pop_back();
     }

@@ -41,69 +41,37 @@ class SquareLatticeLandauLevel {
   }
 
   void construct_kinetic_part() {
-    Operator::Spin spin = Operator::Spin::Up;
     for (size_t i = 0; i < Lx; ++i) {
       for (size_t j = 0; j < Ly; ++j) {
         size_t current = m_index.to_orbital(i, j);
         // Horizontal hopping (x-direction)
         size_t right = m_index.to_orbital((i + 1) % Lx, j);
-        m_hamiltonian += m_t * Expression::Boson::hopping(current, right, spin);
+        m_hamiltonian += m_t * Expression::Boson::hopping(current, right);
 
         // Vertical hopping (y-direction) with Peierls phase
         size_t up = m_index.to_orbital(i, (j + 1) % Ly);
         std::complex<float> phase(0.0f, 2.0f * std::numbers::pi_v<float> *
                                             m_phi * static_cast<float>(i) /
                                             static_cast<float>(Lx));
-        m_hamiltonian += m_t * Expression::Boson::hopping(std::exp(phase),
-                                                          current, up, spin);
+        m_hamiltonian +=
+            m_t * Expression::Boson::hopping(std::exp(phase), current, up);
       }
     }
   }
 
   void construct_interaction_part() {
-    Operator::Spin spin = Operator::Spin::Up;
     for (size_t i = 0; i < Lx; ++i) {
       for (size_t j = 0; j < Ly; ++j) {
         size_t current = m_index.to_orbital(i, j);
         m_hamiltonian += 0.5f * m_U *
-                         Term({Operator::Boson::creation(spin, current),
-                               Operator::Boson::creation(spin, current),
-                               Operator::Boson::annihilation(spin, current),
-                               Operator::Boson::annihilation(spin, current)});
+                         Term({Operator::Boson::creation(current),
+                               Operator::Boson::creation(current),
+                               Operator::Boson::annihilation(current),
+                               Operator::Boson::annihilation(current)});
       }
     }
   }
 };
-
-[[maybe_unused]] static bool check_statistics(const Operator& op,
-                                              Operator::Statistics s) {
-  return op.statistics() == s;
-}
-
-[[maybe_unused]] static bool check_spin_conservation(
-    const Term::container_type& ops) {
-  int spin_up_count = 0;
-  int spin_down_count = 0;
-
-  for (const auto& op : ops) {
-    if (op.spin() == Operator::Spin::Up) {
-      spin_up_count += (op.type() == Operator::Type::Creation) ? 1 : -1;
-    } else {
-      spin_down_count += (op.type() == Operator::Type::Creation) ? 1 : -1;
-    }
-  }
-
-  return spin_up_count == 0 && spin_down_count == 0;
-}
-
-[[maybe_unused]] static bool check_particle_conservation(
-    const Term::container_type& ops) {
-  int creation_count = 0;
-  for (const auto& op : ops) {
-    creation_count += (op.type() == Operator::Type::Creation) ? 1 : -1;
-  }
-  return creation_count == 0;
-}
 
 template <typename Index>
 [[maybe_unused]] static void demonstrate_cls(const Expression& hamiltonian,
@@ -146,13 +114,6 @@ int main() {
   const float U = 4.0f;
 
   SquareLatticeLandauLevel<Lx, Ly> model(t, phi, U);
-
-  QMUTILS_ASSERT(check_expression_predicate(
-      check_statistics, model.hamiltonian(), Operator::Statistics::Bosonic));
-  QMUTILS_ASSERT(check_expression_collective_predicate(check_spin_conservation,
-                                                       model.hamiltonian()));
-  QMUTILS_ASSERT(check_expression_collective_predicate(
-      check_particle_conservation, model.hamiltonian()));
 
   // demonstrate_cls(model.hamiltonian(), model.index());
 

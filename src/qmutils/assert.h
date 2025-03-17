@@ -20,6 +20,8 @@ namespace qmutils {
   ((condition) ? ((void)0)                                            \
                : ::qmutils::qmutils_assert_fail(#condition, __FILE__, \
                                                 __LINE__, __func__))
+
+#define QMUTILS_UNREACHABLE() __builtin_trap()
 #endif
 
 }  // namespace qmutils

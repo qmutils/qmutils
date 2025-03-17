@@ -24,9 +24,10 @@ inline Operator random_operator() {
   static std::uniform_int_distribution<> spin_dis(0, 1);
   static std::uniform_int_distribution<> orbital_dis(0, 63);
 
-  return Operator(static_cast<Operator::Type>(type_dis(get_random_generator())),
-                  static_cast<Operator::Spin>(spin_dis(get_random_generator())),
-                  orbital_dis(get_random_generator()));
+  return Operator::Fermion::make(
+      static_cast<Operator::Type>(type_dis(get_random_generator())),
+      static_cast<Operator::Spin>(spin_dis(get_random_generator())),
+      orbital_dis(get_random_generator()));
 }
 
 inline std::vector<Operator> generate_operator_sequence(size_t size) {

@@ -185,16 +185,11 @@ class Expression {
 
   Expression flip_spin() const;
 
-  static Expression hopping(size_t from_orbital, size_t to_orbital,
-                            Operator::Spin spin);
-
-  static Expression hopping(coefficient_type coeff, size_t from_orbital,
-                            size_t to_orbital, Operator::Spin spin);
-
   struct Fermion;
   struct Boson;
   struct Spin;
 
+  // Remove
   bool is_purely(const Operator::Statistics& s) const {
     return std::all_of(m_terms.begin(), m_terms.end(), [&](const auto& a) {
       return Term(a.first).is_purely(s);
@@ -228,23 +223,21 @@ struct Expression::Fermion {
 };
 
 struct Expression::Boson {
-  static Expression hopping(size_t from_orbital, size_t to_orbital,
-                            Operator::Spin spin) {
+  static Expression hopping(size_t from_orbital, size_t to_orbital) {
     QMUTILS_ASSERT(from_orbital != to_orbital);
     Expression result;
-    result += Term::Boson::one_body(spin, to_orbital, spin, from_orbital);
-    result += Term::Boson::one_body(spin, from_orbital, spin, to_orbital);
+    result += Term::Boson::one_body(to_orbital, from_orbital);
+    result += Term::Boson::one_body(from_orbital, to_orbital);
     return result;
   }
 
   static Expression hopping(coefficient_type coeff, size_t from_orbital,
-                            size_t to_orbital, Operator::Spin spin) {
+                            size_t to_orbital) {
     QMUTILS_ASSERT(from_orbital != to_orbital);
     Expression result;
+    result += coeff * Term::Boson::one_body(to_orbital, from_orbital);
     result +=
-        coeff * Term::Boson::one_body(spin, to_orbital, spin, from_orbital);
-    result += std::conj(coeff) *
-              Term::Boson::one_body(spin, from_orbital, spin, to_orbital);
+        std::conj(coeff) * Term::Boson::one_body(from_orbital, to_orbital);
     return result;
   }
 };
@@ -252,39 +245,41 @@ struct Expression::Boson {
 struct Expression::Spin {
   static Expression spin_x(size_t i) {
     Expression result;
-    result +=
-        0.5f * Term::one_body(Operator::Spin::Up, i, Operator::Spin::Down, i);
-    result +=
-        0.5f * Term::one_body(Operator::Spin::Down, i, Operator::Spin::Up, i);
+    result += 0.5f * Term::Fermion::one_body(Operator::Spin::Up, i,
+                                             Operator::Spin::Down, i);
+    result += 0.5f * Term::Fermion::one_body(Operator::Spin::Down, i,
+                                             Operator::Spin::Up, i);
     return result;
   }
 
   static Expression spin_y(size_t i) {
     Expression result;
-    result += std::complex<float>(0.0f, 0.5f) *
-              Term::one_body(Operator::Spin::Up, i, Operator::Spin::Down, i);
-    result -= std::complex<float>(0.0f, 0.5f) *
-              Term::one_body(Operator::Spin::Down, i, Operator::Spin::Up, i);
+    result +=
+        std::complex<float>(0.0f, 0.5f) *
+        Term::Fermion::one_body(Operator::Spin::Up, i, Operator::Spin::Down, i);
+    result -=
+        std::complex<float>(0.0f, 0.5f) *
+        Term::Fermion::one_body(Operator::Spin::Down, i, Operator::Spin::Up, i);
     return result;
   }
 
   static Expression spin_z(size_t i) {
     Expression result;
-    result +=
-        0.5f * Term::one_body(Operator::Spin::Up, i, Operator::Spin::Up, i);
-    result -=
-        0.5f * Term::one_body(Operator::Spin::Down, i, Operator::Spin::Down, i);
+    result += 0.5f * Term::Fermion::one_body(Operator::Spin::Up, i,
+                                             Operator::Spin::Up, i);
+    result -= 0.5f * Term::Fermion::one_body(Operator::Spin::Down, i,
+                                             Operator::Spin::Down, i);
     return result;
   }
 
   static Expression spin_plus(size_t site) {
-    return Expression(
-        Term::one_body(Operator::Spin::Up, site, Operator::Spin::Down, site));
+    return Expression(Term::Fermion::one_body(Operator::Spin::Up, site,
+                                              Operator::Spin::Down, site));
   }
 
   static Expression spin_minus(size_t site) {
-    return Expression(
-        Term::one_body(Operator::Spin::Down, site, Operator::Spin::Up, site));
+    return Expression(Term::Fermion::one_body(Operator::Spin::Down, site,
+                                              Operator::Spin::Up, site));
   }
 
   static Expression dot_product(size_t i, size_t j) {

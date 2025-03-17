@@ -29,17 +29,17 @@ void HubbardChain1D::construct_hamiltonian() {
   // Hopping terms
   for (size_t i = 0; i < m_sites; ++i) {
     size_t j = (i + 1) % m_sites;  // Periodic boundary conditions
-    m_hamiltonian +=
-        qmutils::Expression::hopping(i, j, qmutils::Operator::Spin::Up);
-    m_hamiltonian +=
-        qmutils::Expression::hopping(i, j, qmutils::Operator::Spin::Down);
+    m_hamiltonian += qmutils::Expression::Fermion::hopping(
+        i, j, qmutils::Operator::Spin::Up);
+    m_hamiltonian += qmutils::Expression::Fermion::hopping(
+        i, j, qmutils::Operator::Spin::Down);
   }
 
   // On-site interaction terms
   for (size_t i = 0; i < m_sites; ++i) {
-    m_hamiltonian += qmutils::Term::density(qmutils::Operator::Spin::Up, i) *
-                     qmutils::Term::density(qmutils::Operator::Spin::Down, i) *
-                     m_U;
+    m_hamiltonian +=
+        qmutils::Term::Fermion::density(qmutils::Operator::Spin::Up, i) *
+        qmutils::Term::Fermion::density(qmutils::Operator::Spin::Down, i) * m_U;
   }
 }
 

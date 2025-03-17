@@ -13,147 +13,175 @@ namespace qmutils {
 class Operator {
  public:
   using int_type = uint16_t;
-
   enum class Type : int_type { Creation = 0, Annihilation = 1 };
   enum class Spin : int_type { Up = 0, Down = 1 };
-  enum class Statistics : int_type { Fermionic = 0, Bosonic = 1 };
+  enum class Statistics : int_type { Fermion = 0, Boson = 1 };
 
-  static constexpr size_t ORBITAL_BITFIELD_WIDTH = sizeof(int_type) * 8 - 3;
+  struct Fermion {
+    static constexpr size_t ORBITAL_BITFIELD_WIDTH = sizeof(int_type) * 8 - 3;
 
-  static constexpr size_t max_orbital_size() {
-    return 1 << ORBITAL_BITFIELD_WIDTH;
-  }
+    [[nodiscard]] static constexpr Operator make(Type type, Spin spin,
+                                                 size_t orbital) noexcept {
+      QMUTILS_ASSERT(orbital <
+                     max_orbital_size());  // Max orbital is 2^13 - 1 = 8191
+      uint16_t data = 0;                   // Bit 15 = 0 (fermion)
+      data |= static_cast<uint16_t>(type) << 14;  // Bit 14 = type
+      data |= static_cast<uint16_t>(spin) << 13;  // Bit 13 = spin
+      data |= static_cast<uint16_t>(orbital);     // Bits 0-12 = orbital
+      return Operator(data);
+    }
+
+    [[nodiscard]] static constexpr size_t max_orbital_size() noexcept {
+      return 1 << ORBITAL_BITFIELD_WIDTH;
+    }
+
+    [[nodiscard]] static constexpr Operator creation(Spin spin,
+                                                     size_t orbital) noexcept {
+      QMUTILS_ASSERT(orbital < max_orbital_size());
+      return make(Type::Creation, spin, orbital);
+    }
+
+    [[nodiscard]] static constexpr Operator annihilation(
+        Spin spin, size_t orbital) noexcept {
+      QMUTILS_ASSERT(orbital < max_orbital_size());
+      return make(Type::Annihilation, spin, orbital);
+    }
+
+    [[nodiscard]] static constexpr Spin spin(Operator this_) noexcept {
+      return static_cast<Spin>((this_.data_ >> 13) & 1);
+    }
+
+    [[nodiscard]] static constexpr size_t orbital(Operator this_) noexcept {
+      return this_.data_ & 0x1FFF;  // Bits 0-12 (13 bits)
+    }
+
+    [[nodiscard]] static constexpr Operator flip_spin(Operator this_) noexcept {
+      return Operator(this_.data_ ^ (1 << 13));
+    }
+  };
+
+  struct Boson {
+    static constexpr size_t ORBITAL_BITFIELD_WIDTH = sizeof(int_type) * 8 - 2;
+
+    [[nodiscard]] static constexpr Operator make(Type type,
+                                                 size_t orbital) noexcept {
+      QMUTILS_ASSERT(orbital <
+                     max_orbital_size());  // Max orbital is 2^14 - 1 = 16383
+      uint16_t data = 1 << 15;             // Bit 15 = 1 (boson)
+      data |= static_cast<uint16_t>(type) << 14;  // Bit 14 = type
+      data |= static_cast<uint16_t>(orbital);     // Bits 0-13 = orbital
+      return Operator(data);
+    }
+
+    [[nodiscard]] static constexpr size_t max_orbital_size() noexcept {
+      return 1 << ORBITAL_BITFIELD_WIDTH;
+    }
+
+    [[nodiscard]] static constexpr Operator creation(size_t orbital) noexcept {
+      return make(Type::Creation, orbital);
+    }
+
+    [[nodiscard]] static constexpr Operator annihilation(
+        size_t orbital) noexcept {
+      return make(Type::Annihilation, orbital);
+    }
+
+    [[nodiscard]] static constexpr size_t orbital(Operator o) noexcept {
+      return o.data_ & 0x1FFF;  // Bits 0-12 (13 bits)
+    }
+  };
 
   Operator() = default;
 
-  constexpr Operator(Type type, Spin spin, size_t orbital,
-                     Statistics stat = Statistics::Fermionic) noexcept
-      : data_{.orbital = static_cast<int_type>(orbital),
-              .spin = static_cast<int_type>(spin),
-              .type = static_cast<int_type>(type),
-              .statistics = static_cast<int_type>(stat)} {
-    QMUTILS_ASSERT(orbital <= max_orbital_size());
+  [[nodiscard]] constexpr Statistics statistics() const noexcept {
+    return static_cast<Statistics>((data_ >> 15) & 1);
   }
 
   [[nodiscard]] constexpr Type type() const noexcept {
-    return static_cast<Type>(data_.type);
+    return static_cast<Type>((data_ >> 14) & 1);
   }
 
   [[nodiscard]] constexpr size_t orbital() const noexcept {
-    return data_.orbital;
+    switch (statistics()) {
+      case Statistics::Fermion:
+        return Fermion::orbital(*this);
+      case Statistics::Boson:
+        return Boson::orbital(*this);
+    }
+    QMUTILS_UNREACHABLE();
+    return 0;
   }
 
   [[nodiscard]] constexpr Spin spin() const noexcept {
-    return static_cast<Spin>(data_.spin);
+    QMUTILS_ASSERT(statistics() == Statistics::Fermion);
+    return Fermion::spin(*this);
   }
 
-  [[nodiscard]] constexpr Statistics statistics() const noexcept {
-    return static_cast<Statistics>(data_.statistics);
+  [[nodiscard]] Operator adjoint() const noexcept {
+    return Operator(data_ ^ (1 << 14));
   }
 
-  constexpr bool operator<(const Operator &other) const noexcept {
+  [[nodiscard]] Operator flip_spin() const noexcept {
+    QMUTILS_ASSERT(statistics() == Statistics::Fermion);
+    return Fermion::flip_spin(*this);
+  }
+
+  [[nodiscard]] constexpr bool commutes(Operator other) const noexcept {
+    return (this->data_ ^ other.data_) != (1 << 14);
+  }
+
+  constexpr bool operator<(Operator other) const noexcept {
     return data() < other.data();
   }
 
-  constexpr bool operator>(const Operator &other) const noexcept {
+  constexpr bool operator>(Operator other) const noexcept {
     return data() > other.data();
   }
 
-  constexpr bool operator==(const Operator &other) const noexcept {
+  constexpr bool operator==(Operator other) const noexcept {
     return data() == other.data();
   }
 
-  constexpr bool operator>=(const Operator &other) const noexcept {
+  constexpr bool operator>=(Operator other) const noexcept {
     return data() >= other.data();
   }
 
-  constexpr bool operator<=(const Operator &other) const noexcept {
+  constexpr bool operator<=(Operator other) const noexcept {
     return data() <= other.data();
   }
 
-  [[nodiscard]] constexpr bool commutes_with(
-      const Operator &other) const noexcept {
-    return (data_.statistics != other.data_.statistics) ||
-           ((data_.type == other.data_.type) ||
-            ((data_.spin != other.data_.spin) ||
-             (data_.orbital != other.data_.orbital)));
+  constexpr bool is_fermion() const {
+    return statistics() == Statistics::Fermion;
   }
 
-  [[nodiscard]] constexpr Operator adjoint() const noexcept {
-    return Operator(static_cast<Type>(!data_.type),
-                    static_cast<Spin>(data_.spin), data_.orbital,
-                    static_cast<Statistics>(data_.statistics));
-  }
+  constexpr bool is_boson() const { return statistics() == Statistics::Boson; }
 
-  [[nodiscard]] constexpr Operator flip_spin() const noexcept {
-    return Operator(static_cast<Type>(data_.type),
-                    static_cast<Spin>(!data_.spin), data_.orbital,
-                    static_cast<Statistics>(data_.statistics));
+  static constexpr int_type parity(Operator op1, Operator op2) {
+    if (op1.statistics() != op2.statistics()) {
+      return 0;
+    } else {
+      switch (op1.statistics()) {
+        case Statistics::Fermion:
+          return 1;
+        case Statistics::Boson:
+          return 0;
+      }
+    }
+    QMUTILS_UNREACHABLE();
+    return 0;
   }
 
   [[nodiscard]] std::string to_string() const;
 
   friend std::ostream &operator<<(std::ostream &os, const Operator &op);
 
-  [[nodiscard]] static constexpr Operator creation(Spin spin,
-                                                   size_t orbital) noexcept {
-    return Operator(Type::Creation, spin, orbital);
-  }
-
-  [[nodiscard]] static constexpr Operator annihilation(
-      Spin spin, size_t orbital) noexcept {
-    return Operator(Type::Annihilation, spin, orbital);
-  }
-
-  [[nodiscard]] constexpr int_type data() const noexcept {
-    return std::bit_cast<int_type>(data_);
-  }
-
-  static constexpr bool is_fermion(Operator op) noexcept {
-    return op.statistics() == Statistics::Fermionic;
-  }
-
-  static constexpr bool is_boson(Operator op) noexcept {
-    return op.statistics() == Statistics::Bosonic;
-  }
-
-  struct Fermion;
-  struct Boson;
+  [[nodiscard]] constexpr int_type data() const noexcept { return data_; }
 
  private:
-  struct Data {
-    int_type orbital : ORBITAL_BITFIELD_WIDTH;
-    int_type spin : 1;
-    int_type type : 1;
-    int_type statistics : 1;
-  };
-  static_assert(std::has_unique_object_representations_v<Data>);
-
-  Data data_;
+  constexpr explicit Operator(uint16_t data) noexcept : data_(data) {}
+  int_type data_;
 };
-static_assert(std::is_trivially_copyable_v<Operator>,
-              "Operator must be trivially copyable");
 static_assert(sizeof(Operator) == 2, "Operator must be 2 byte in size");
-
-struct Operator::Fermion {
-  static constexpr Operator creation(Spin spin, size_t orbital) noexcept {
-    return Operator(Type::Creation, spin, orbital, Statistics::Fermionic);
-  }
-
-  static constexpr Operator annihilation(Spin spin, size_t orbital) noexcept {
-    return Operator(Type::Annihilation, spin, orbital, Statistics::Fermionic);
-  }
-};
-
-struct Operator::Boson {
-  static constexpr Operator creation(Spin spin, size_t orbital) noexcept {
-    return Operator(Type::Creation, spin, orbital, Statistics::Bosonic);
-  }
-
-  static constexpr Operator annihilation(Spin spin, size_t orbital) noexcept {
-    return Operator(Type::Annihilation, spin, orbital, Statistics::Bosonic);
-  }
-};
 }  // namespace qmutils
 
 template <>

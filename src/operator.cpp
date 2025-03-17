@@ -4,12 +4,16 @@
 
 namespace qmutils {
 
-std::string Operator::to_string() const {
-  std::ostringstream oss;
-  oss << (data_.type == static_cast<uint8_t>(Type::Creation) ? "c+" : "c")
-      << "(" << (data_.spin == static_cast<uint8_t>(Spin::Up) ? "↑" : "↓")
-      << "," << static_cast<int>(data_.orbital) << ")";
-  return oss.str();
+[[nodiscard]] std::string Operator::to_string() const {
+  if (statistics() == Statistics::Fermion) {
+    std::string spin_str = (spin() == Spin::Up) ? "↑" : "↓";
+    std::string type_str = (type() == Type::Creation) ? "+" : "";
+    return "f" + type_str + "(" + spin_str + "," + std::to_string(orbital()) +
+           ")";
+  } else {
+    std::string type_str = (type() == Type::Creation) ? "+" : "";
+    return "b" + type_str + "(" + std::to_string(orbital()) + ")";
+  }
 }
 
 std::ostream& operator<<(std::ostream& os, const Operator& op) {

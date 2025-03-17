@@ -22,18 +22,18 @@ class Hubbard1DModel {
     // Hopping terms
     for (size_t i = 0; i < m_sites; ++i) {
       size_t j = (i + 1) % m_sites;  // Periodic boundary conditions
-      H += -m_t *
-           qmutils::Expression::hopping(i, j, qmutils::Operator::Spin::Up);
-      H += -m_t *
-           qmutils::Expression::hopping(i, j, qmutils::Operator::Spin::Down);
+      H += -m_t * qmutils::Expression::Fermion::hopping(
+                      i, j, qmutils::Operator::Spin::Up);
+      H += -m_t * qmutils::Expression::Fermion::hopping(
+                      i, j, qmutils::Operator::Spin::Down);
     }
 
     // Mean-field interaction terms
     for (size_t i = 0; i < m_sites; ++i) {
       H += m_U * down_occupations[i] *
-           qmutils::Term::density(qmutils::Operator::Spin::Up, i);
+           qmutils::Term::Fermion::density(qmutils::Operator::Spin::Up, i);
       H += m_U * up_occupations[i] *
-           qmutils::Term::density(qmutils::Operator::Spin::Down, i);
+           qmutils::Term::Fermion::density(qmutils::Operator::Spin::Down, i);
       H += -m_U * up_occupations[i] * down_occupations[i];
     }
 

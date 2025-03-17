@@ -11,7 +11,7 @@ std::ostream& operator<<(std::ostream& os, const Expression& expression) {
 
 static bool constexpr both_are_fermions_and_equal(const Operator& a,
                                                   const Operator& b) {
-  return Operator::is_fermion(a) && Operator::is_fermion(b) && a == b;
+  return a.is_fermion() && b.is_fermion() && a == b;
 }
 
 void Expression::normalize() {
@@ -66,24 +66,4 @@ Expression Expression::flip_spin() const {
   }
   return result;
 }
-
-Expression Expression::hopping(size_t from_orbital, size_t to_orbital,
-                               Operator::Spin spin) {
-  QMUTILS_ASSERT(from_orbital != to_orbital);
-  Expression result;
-  result += Term::one_body(spin, from_orbital, spin, to_orbital);
-  result += Term::one_body(spin, to_orbital, spin, from_orbital);
-  return result;
-}
-
-Expression Expression::hopping(coefficient_type coeff, size_t from_orbital,
-                               size_t to_orbital, Operator::Spin spin) {
-  QMUTILS_ASSERT(from_orbital != to_orbital);
-  Expression result;
-  result += coeff * Term::one_body(spin, from_orbital, spin, to_orbital);
-  result +=
-      std::conj(coeff) * Term::one_body(spin, to_orbital, spin, from_orbital);
-  return result;
-}
-
 }  // namespace qmutils

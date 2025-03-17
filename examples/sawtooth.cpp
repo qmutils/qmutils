@@ -52,8 +52,6 @@ class SawtoothModel {
   std::vector<Vec2> m_position;
 
   void construct_hamiltonian() {
-    auto s = Operator::Spin::Up;
-
     m_position.resize(L * 2);
 
     for (size_t i = 0; i < L; ++i) {
@@ -62,11 +60,11 @@ class SawtoothModel {
       size_t next_A_site = m_index.to_orbital((i + 1) % L, 0);
 
       m_hopping_hamiltonian +=
-          m_t1 * Expression::Boson::hopping(A_site, B_site, s);
+          m_t1 * Expression::Boson::hopping(A_site, B_site);
       m_hopping_hamiltonian +=
-          m_t1 * Expression::Boson::hopping(B_site, next_A_site, s);
+          m_t1 * Expression::Boson::hopping(B_site, next_A_site);
       m_hopping_hamiltonian +=
-          m_t2 * Expression::Boson::hopping(A_site, next_A_site, s);
+          m_t2 * Expression::Boson::hopping(A_site, next_A_site);
 
       Vec2 displacement = Vec2{1, 0} * static_cast<float>(i);
       m_position[A_site] = Vec2{0, 0} + displacement;
@@ -79,37 +77,35 @@ class SawtoothModel {
 
       m_interaction_hamiltonian +=
           0.5f * m_U *
-          Term({Operator::Boson::creation(s, A_site),
-                Operator::Boson::creation(s, A_site),
-                Operator::Boson::annihilation(s, A_site),
-                Operator::Boson::annihilation(s, A_site)});
+          Term({Operator::Boson::creation(A_site),
+                Operator::Boson::creation(A_site),
+                Operator::Boson::annihilation(A_site),
+                Operator::Boson::annihilation(A_site)});
 
       m_interaction_hamiltonian +=
           0.5f * m_U *
-          Term({Operator::Boson::creation(s, B_site),
-                Operator::Boson::creation(s, B_site),
-                Operator::Boson::annihilation(s, B_site),
-                Operator::Boson::annihilation(s, B_site)});
+          Term({Operator::Boson::creation(B_site),
+                Operator::Boson::creation(B_site),
+                Operator::Boson::annihilation(B_site),
+                Operator::Boson::annihilation(B_site)});
     }
   }
 
  public:
   Expression cls(size_t i) {
-    auto s = Operator::Spin::Up;
     Expression result;
     size_t A_site = m_index.to_orbital(i, 0);
     size_t B_site = m_index.to_orbital(i, 1);
     size_t previous_B_site = m_index.to_orbital((i + L - 1) % L, 1);
-    result += 0.5f * std::sqrt(2.0f) * Term::Boson::creation(s, A_site);
-    result -= 0.5f * Term::Boson::creation(s, B_site);
-    result -= 0.5f * Term::Boson::creation(s, previous_B_site);
+    result += 0.5f * std::sqrt(2.0f) * Term::Boson::creation(A_site);
+    result -= 0.5f * Term::Boson::creation(B_site);
+    result -= 0.5f * Term::Boson::creation(previous_B_site);
     return result;
   }
 
   Expression density_operator(size_t i, size_t k) const {
     Expression result;
-    result +=
-        Term::Boson::density(Operator::Spin::Up, m_index.to_orbital(i, k));
+    result += Term::Boson::density(m_index.to_orbital(i, k));
     return result;
   }
 };

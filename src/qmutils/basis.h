@@ -131,7 +131,7 @@ class BosonicBasis : public BasisBase {
  public:
   BosonicBasis(size_t orbitals, size_t particles)
       : BasisBase(orbitals, particles) {
-    QMUTILS_ASSERT(orbitals <= Operator::max_orbital_size());
+    QMUTILS_ASSERT(orbitals <= Operator::Boson::max_orbital_size());
     size_t basis_size = compute_basis_size(orbitals, particles);
     m_index_map.reserve(basis_size);
     generate_basis();
@@ -167,7 +167,7 @@ class HardCoreBosonicBasis : public BasisBase {
  public:
   HardCoreBosonicBasis(size_t orbitals, size_t particles)
       : BasisBase(orbitals, particles) {
-    QMUTILS_ASSERT(orbitals <= Operator::max_orbital_size());
+    QMUTILS_ASSERT(orbitals <= Operator::Boson::max_orbital_size());
     size_t basis_size = compute_basis_size(orbitals, particles);
     m_index_map.reserve(basis_size);
     generate_basis();

@@ -208,9 +208,8 @@ static Expression fourier_transform_operator_2d(
       std::complex<float> coefficient =
           std::exp(static_cast<float>(direction) * exponent) * normalization;
 
-      Operator transformed_op(op.type(), op.spin(),
-                              lattice.to_orbital(kx, ky, site),
-                              op.statistics());
+      Operator transformed_op = Operator::Fermion::make(
+          op.type(), op.spin(), lattice.to_orbital(kx, ky, site));
       result += Term(coefficient, {transformed_op});
     }
   }
@@ -234,8 +233,9 @@ arma::cx_fmat construct_k_matrix(
   for (size_t band1 = 0; band1 < num_bands; ++band1) {
     for (size_t band2 = 0; band2 < num_bands; ++band2) {
       const std::vector<Operator> needle{
-          Operator::creation(s, indexer.to_orbital(kx, ky, band1)),
-          Operator::annihilation(s, indexer.to_orbital(kx, ky, band2))};
+          Operator::Fermion::creation(s, indexer.to_orbital(kx, ky, band1)),
+          Operator::Fermion::annihilation(s,
+                                          indexer.to_orbital(kx, ky, band2))};
       if (H.terms().contains(needle)) {
         matrix(band1, band2) = H.terms().at(needle);
       } else {
@@ -428,8 +428,8 @@ void print_expression(const Expression& expr, const Index& index) {
     const Term& term) {
   std::unordered_map<Operator, int> op_infos;
   for (const auto& op : term.operators()) {
-    Operator info(Operator::Type::Creation, op.spin(), op.orbital(),
-                  op.statistics());
+    Operator info = Operator::Fermion::make(Operator::Type::Creation, op.spin(),
+                                            op.orbital());
     op_infos[info] += (op.type() == Operator::Type::Creation) ? 1 : -1;
   }
   return std::all_of(op_infos.begin(), op_infos.end(),

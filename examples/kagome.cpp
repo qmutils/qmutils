@@ -48,17 +48,14 @@ class KagomeModel {
   NormalOrderer orderer;
 
   Term density_density_interaction(size_t site) const {
-    auto s = Operator::Spin::Up;
     return 0.5f * m_U *
-           Term({Operator::Boson::creation(s, site),
-                 Operator::Boson::creation(s, site),
-                 Operator::Boson::annihilation(s, site),
-                 Operator::Boson::annihilation(s, site)});
+           Term({Operator::Boson::creation(site),
+                 Operator::Boson::creation(site),
+                 Operator::Boson::annihilation(site),
+                 Operator::Boson::annihilation(site)});
   }
 
   void construct_hamiltonian() {
-    auto s = Operator::Spin::Up;
-
     m_position.resize(Lx * Ly * 3);
 
     for (size_t i = 0; i < Lx; ++i) {
@@ -72,16 +69,16 @@ class KagomeModel {
         size_t next_C_x_y_site =
             m_index.to_orbital((i + 1) % Lx, (j + Ly - 1) % Ly, 2);
 
-        m_hamiltonian += m_t1 * Expression::Boson::hopping(A_site, B_site, s);
-        m_hamiltonian += m_t1 * Expression::Boson::hopping(B_site, C_site, s);
-        m_hamiltonian += m_t1 * Expression::Boson::hopping(C_site, A_site, s);
+        m_hamiltonian += m_t1 * Expression::Boson::hopping(A_site, B_site);
+        m_hamiltonian += m_t1 * Expression::Boson::hopping(B_site, C_site);
+        m_hamiltonian += m_t1 * Expression::Boson::hopping(C_site, A_site);
 
         m_hamiltonian +=
-            m_t1 * Expression::Boson::hopping(B_site, next_A_x_site, s);
+            m_t1 * Expression::Boson::hopping(B_site, next_A_x_site);
         m_hamiltonian +=
-            m_t1 * Expression::Boson::hopping(C_site, next_A_y_site, s);
+            m_t1 * Expression::Boson::hopping(C_site, next_A_y_site);
         m_hamiltonian +=
-            m_t1 * Expression::Boson::hopping(B_site, next_C_x_y_site, s);
+            m_t1 * Expression::Boson::hopping(B_site, next_C_x_y_site);
 
         m_hamiltonian += density_density_interaction(A_site);
         m_hamiltonian += density_density_interaction(B_site);
@@ -111,34 +108,32 @@ class KagomeModel {
             m_index.to_orbital((i + 1) % Lx, (j + Ly - 1) % Ly, 2);
 
         m_bonds.push_back({m_position[A_site], m_position[B_site],
-                           m_t1 * edge(A_site, B_site, s)});
+                           m_t1 * edge(A_site, B_site)});
         m_bonds.push_back({m_position[B_site], m_position[C_site],
-                           m_t1 * edge(B_site, C_site, s)});
+                           m_t1 * edge(B_site, C_site)});
         m_bonds.push_back({m_position[C_site], m_position[A_site],
-                           m_t1 * edge(C_site, A_site, s)});
+                           m_t1 * edge(C_site, A_site)});
 
         m_bonds.push_back({m_position[B_site], m_position[next_A_x_site],
-                           m_t1 * edge(B_site, next_A_x_site, s)});
+                           m_t1 * edge(B_site, next_A_x_site)});
         m_bonds.push_back({m_position[C_site], m_position[next_A_y_site],
-                           m_t1 * edge(C_site, next_A_y_site, s)});
+                           m_t1 * edge(C_site, next_A_y_site)});
         m_bonds.push_back({m_position[B_site], m_position[next_C_x_y_site],
-                           m_t1 * edge(B_site, next_C_x_y_site, s)});
+                           m_t1 * edge(B_site, next_C_x_y_site)});
       }
     }
   }
 
-  Expression edge(size_t from_orbital, size_t to_orbital, Operator::Spin spin) {
+  Expression edge(size_t from_orbital, size_t to_orbital) {
     QMUTILS_ASSERT(from_orbital != to_orbital);
     Expression result;
-    result += Term::Boson::one_body(spin, from_orbital, spin, to_orbital);
-    result -= Term::Boson::one_body(spin, to_orbital, spin, from_orbital);
+    result += Term::Boson::one_body(from_orbital, to_orbital);
+    result -= Term::Boson::one_body(to_orbital, from_orbital);
     return result;
   }
 
  public:
   Expression v(size_t i, size_t j) const {
-    auto s = Operator::Spin::Up;
-
     // size_t A_site = m_index.to_orbital(i, j, 0);
     size_t B_site = m_index.to_orbital(i, j, 1);
     size_t C_site = m_index.to_orbital(i, j, 2);
@@ -153,19 +148,17 @@ class KagomeModel {
 
     Expression result;
 
-    result += Term::Boson::creation(s, C_site);
-    result -= Term::Boson::creation(s, B_site);
-    result += Term::Boson::creation(s, next_A_site_x);
-    result -= Term::Boson::creation(s, next_C_site_x);
-    result += Term::Boson::creation(s, next_B_site_y);
-    result -= Term::Boson::creation(s, next_A_site_y);
+    result += Term::Boson::creation(C_site);
+    result -= Term::Boson::creation(B_site);
+    result += Term::Boson::creation(next_A_site_x);
+    result -= Term::Boson::creation(next_C_site_x);
+    result += Term::Boson::creation(next_B_site_y);
+    result -= Term::Boson::creation(next_A_site_y);
 
     return (1.0f / std::sqrt(6.0f)) * result;
   }
 
   Expression f(size_t j) const {
-    auto s = Operator::Spin::Up;
-
     Expression result;
 
     for (size_t i = 0; i < Lx; i++) {
@@ -173,16 +166,14 @@ class KagomeModel {
       size_t B_site = m_index.to_orbital(i, j, 1);
       // size_t C_site = m_index.to_orbital(i, j, 2);
 
-      result += Term::Boson::creation(s, A_site);
-      result -= Term::Boson::creation(s, B_site);
+      result += Term::Boson::creation(A_site);
+      result -= Term::Boson::creation(B_site);
     }
 
     return (1.0f / std::sqrt(Lx)) * result;
   }
 
   Expression g(size_t i) const {
-    auto s = Operator::Spin::Up;
-
     Expression result;
 
     for (size_t j = 0; j < Ly; j++) {
@@ -190,18 +181,17 @@ class KagomeModel {
       // size_t B_site = m_index.to_orbital(i, j, 1);
       size_t C_site = m_index.to_orbital(i, j, 2);
 
-      result += Term::Boson::creation(s, A_site);
-      result -= Term::Boson::creation(s, C_site);
+      result += Term::Boson::creation(A_site);
+      result -= Term::Boson::creation(C_site);
     }
 
     return (1.0f / std::sqrt(Ly)) * result;
   }
 
   Expression density_operator(size_t i, size_t j, size_t k) {
-    auto s = Operator::Spin::Up;
     Expression result;
     size_t site = m_index.to_orbital(i, j, k);
-    result += Term::Boson::density(s, site);
+    result += Term::Boson::density(site);
     return result;
   }
 };

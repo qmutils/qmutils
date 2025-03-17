@@ -20,7 +20,7 @@ Operator random_operator() {
   Operator::Spin spin = static_cast<Operator::Spin>(spin_dist(gen));
   uint8_t orbital = static_cast<uint8_t>(orbital_dist(gen));
 
-  return Operator(type, spin, orbital);
+  return Operator::Fermion::make(type, spin, orbital);
 }
 
 Term create_random_term(size_t n_operators) {
@@ -58,11 +58,11 @@ Term create_noncommuting_term(size_t n_operators) {
   operators.reserve(n_operators);
 
   for (size_t i = 0; i < n_operators / 2; ++i) {
-    operators.push_back(Operator::annihilation(Operator::Spin::Up, 0));
+    operators.push_back(Operator::Fermion::annihilation(Operator::Spin::Up, 0));
   }
 
   for (size_t i = 0; i < n_operators / 2; ++i) {
-    operators.push_back(Operator::creation(Operator::Spin::Up, 0));
+    operators.push_back(Operator::Fermion::creation(Operator::Spin::Up, 0));
   }
 
   return Term(Term::coefficient_type(1.0f, 0.0f), std::move(operators));
@@ -99,10 +99,10 @@ Term generate_momentum_conserving_term(uint8_t nk) {
   uint8_t k4 = (k1 + k2 - k3 + nk) % nk;  // Ensure momentum conservation
 
   return Term(Term::coefficient_type(1.0f, 0.0f),
-              {Operator::creation(Operator::Spin::Up, k1),
-               Operator::creation(Operator::Spin::Down, k2),
-               Operator::annihilation(Operator::Spin::Up, k3),
-               Operator::annihilation(Operator::Spin::Down, k4)});
+              {Operator::Fermion::creation(Operator::Spin::Up, k1),
+               Operator::Fermion::creation(Operator::Spin::Down, k2),
+               Operator::Fermion::annihilation(Operator::Spin::Up, k3),
+               Operator::Fermion::annihilation(Operator::Spin::Down, k4)});
 }
 
 static void BM_LRUCacheNormalOrderMomentumPreserving(benchmark::State& state) {

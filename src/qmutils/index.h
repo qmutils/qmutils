@@ -55,7 +55,8 @@ class StaticIndex {
   static constexpr size_t Dimensions = sizeof...(Dims);
 
   constexpr StaticIndex() {
-    static_assert(total_size() <= Operator::max_orbital_size(),
+    // Assume Fermion for now
+    static_assert(total_size() <= Operator::Fermion::max_orbital_size(),
                   "Size exceeds maximum number of orbitals");
   }
 
@@ -134,7 +135,8 @@ class DynamicIndex {
  public:
   DynamicIndex(std::vector<size_t> dimensions)
       : m_dimensions(std::move(dimensions)) {
-    if (total_size() > Operator::max_orbital_size()) {
+    // Assume fermion for now
+    if (total_size() > Operator::Fermion::max_orbital_size()) {
       throw std::out_of_range("Size exceeds maximum number of orbitals");
     }
   }

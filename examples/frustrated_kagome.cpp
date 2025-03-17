@@ -61,10 +61,10 @@ class KagomeModel {
     size_t orbital2 = m_index.to_orbital(x2, y2, site2);
 
     // Add hopping for both spin up and spin down
-    m_hamiltonian +=
-        m_t * Expression::hopping(orbital1, orbital2, Operator::Spin::Up);
-    m_hamiltonian +=
-        m_t * Expression::hopping(orbital1, orbital2, Operator::Spin::Down);
+    m_hamiltonian += m_t * Expression::Fermion::hopping(orbital1, orbital2,
+                                                        Operator::Spin::Up);
+    m_hamiltonian += m_t * Expression::Fermion::hopping(orbital1, orbital2,
+                                                        Operator::Spin::Down);
   }
 };
 
@@ -130,7 +130,8 @@ class KagomeCompactState {
     for (const auto& site : cls_sites) {
       size_t orbital =
           model.lattice().to_orbital(site.x % Lx, site.y % Ly, site.site_index);
-      state += site.amplitude * Term::creation(Operator::Spin::Up, orbital);
+      state +=
+          site.amplitude * Term::Fermion::creation(Operator::Spin::Up, orbital);
     }
 
     return state;

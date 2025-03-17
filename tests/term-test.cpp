@@ -10,8 +10,8 @@ namespace {
 
 class TermTest : public ::testing::Test {
  protected:
-  Operator op1 = Operator::creation(Operator::Spin::Up, 0);
-  Operator op2 = Operator::annihilation(Operator::Spin::Down, 1);
+  Operator op1 = Operator::Fermion::creation(Operator::Spin::Up, 0);
+  Operator op2 = Operator::Fermion::annihilation(Operator::Spin::Down, 1);
   std::complex<float> coeff{0.5f, -0.5f};
 };
 
@@ -85,7 +85,7 @@ TEST_F(TermTest, ComparisonOperators) {
 // d. Utility function tests
 TEST_F(TermTest, ToString) {
   Term term(coeff, {op1, op2});
-  std::string expected = "(0.5,-0.5) c+(↑,0)c(↓,1)";
+  std::string expected = "(0.5,-0.5) f+(↑,0)f(↓,1)";
   EXPECT_EQ(term.to_string(), expected);
 }
 
@@ -114,8 +114,8 @@ TEST_F(TermTest, LargeNumberOfOperators) {
 
 TEST_F(TermTest, IntegrationWithOperator) {
   Term term({0.5f, -0.5f});
-  term *= Operator::creation(Operator::Spin::Up, 0);
-  term *= Operator::annihilation(Operator::Spin::Down, 1);
+  term *= Operator::Fermion::creation(Operator::Spin::Up, 0);
+  term *= Operator::Fermion::annihilation(Operator::Spin::Down, 1);
 
   EXPECT_EQ(term.size(), 2);
   EXPECT_EQ(term[0].type(), Operator::Type::Creation);
@@ -128,8 +128,8 @@ TEST_F(TermTest, IntegrationWithOperator) {
 }
 
 TEST_F(TermTest, Adjoint) {
-  Operator c_up_0 = Operator::creation(Operator::Spin::Up, 0);
-  Operator a_down_1 = Operator::annihilation(Operator::Spin::Down, 1);
+  Operator c_up_0 = Operator::Fermion::creation(Operator::Spin::Up, 0);
+  Operator a_down_1 = Operator::Fermion::annihilation(Operator::Spin::Down, 1);
   std::complex<float> coeff(1.0f, 2.0f);
 
   Term original(coeff, {c_up_0, a_down_1});
@@ -150,32 +150,32 @@ TEST_F(TermTest, AdjointOfAdjointIsOriginal) {
 }
 
 TEST_F(TermTest, TermFlipSpin) {
-  Term term({1.0f, 0.0f}, {Operator::creation(Operator::Spin::Up, 0),
-                           Operator::annihilation(Operator::Spin::Down, 1)});
+  Term term({1.0f, 0.0f},
+            {Operator::Fermion::creation(Operator::Spin::Up, 0),
+             Operator::Fermion::annihilation(Operator::Spin::Down, 1)});
   Term flipped = term.flip_spin();
 
   EXPECT_EQ(flipped.coefficient(), term.coefficient());
   ASSERT_EQ(flipped.size(), 2);
-  EXPECT_EQ(flipped[0], Operator::creation(Operator::Spin::Down, 0));
-  EXPECT_EQ(flipped[1], Operator::annihilation(Operator::Spin::Up, 1));
+  EXPECT_EQ(flipped[0], Operator::Fermion::creation(Operator::Spin::Down, 0));
+  EXPECT_EQ(flipped[1], Operator::Fermion::annihilation(Operator::Spin::Up, 1));
 }
 
 TEST_F(TermTest, TermIsPurely) {
   Term fermion_term({1.0f, 0.0f},
                     {Operator::Fermion::creation(Operator::Spin::Up, 0),
                      Operator::Fermion::annihilation(Operator::Spin::Down, 1)});
-  Term boson_term({1.0f, 0.0f},
-                  {Operator::Boson::creation(Operator::Spin::Up, 0),
-                   Operator::Boson::annihilation(Operator::Spin::Down, 1)});
+  Term boson_term({1.0f, 0.0f}, {Operator::Boson::creation(0),
+                                 Operator::Boson::annihilation(1)});
 
-  EXPECT_TRUE(fermion_term.is_purely(Operator::Statistics::Fermionic));
-  EXPECT_TRUE(boson_term.is_purely(Operator::Statistics::Bosonic));
+  EXPECT_TRUE(fermion_term.is_purely(Operator::Statistics::Fermion));
+  EXPECT_TRUE(boson_term.is_purely(Operator::Statistics::Boson));
 
   Term mixed_term({1.0f, 0.0f},
                   {Operator::Fermion::creation(Operator::Spin::Up, 0),
-                   Operator::Boson::annihilation(Operator::Spin::Down, 1)});
-  EXPECT_FALSE(mixed_term.is_purely(Operator::Statistics::Fermionic));
-  EXPECT_FALSE(mixed_term.is_purely(Operator::Statistics::Bosonic));
+                   Operator::Boson::annihilation(1)});
+  EXPECT_FALSE(mixed_term.is_purely(Operator::Statistics::Fermion));
+  EXPECT_FALSE(mixed_term.is_purely(Operator::Statistics::Boson));
 }
 
 TEST_F(TermTest, TermIsDiagonal) {
@@ -188,9 +188,8 @@ TEST_F(TermTest, TermIsDiagonal) {
   }
 
   {
-    Term term1 =
-        Term::Boson::one_body(Operator::Spin::Up, 0, Operator::Spin::Up, 1);
-    Term term2 = Term::Boson::density(Operator::Spin::Up, 0);
+    Term term1 = Term::Boson::one_body(0, 1);
+    Term term2 = Term::Boson::density(0);
     EXPECT_FALSE(term1.is_diagonal());
     EXPECT_TRUE(term2.is_diagonal());
   }

@@ -60,24 +60,24 @@ class TightBindingModel2D {
         // Horizontal hopping
         size_t next_x = (x + 1) % m_index.width();
         m_hamiltonian +=
-            m_t * Expression::hopping(m_index.to_orbital(x, y),
-                                      m_index.to_orbital(next_x, y),
-                                      Operator::Spin::Up);
+            m_t * Expression::Fermion::hopping(m_index.to_orbital(x, y),
+                                               m_index.to_orbital(next_x, y),
+                                               Operator::Spin::Up);
         m_hamiltonian +=
-            m_t * Expression::hopping(m_index.to_orbital(x, y),
-                                      m_index.to_orbital(next_x, y),
-                                      Operator::Spin::Down);
+            m_t * Expression::Fermion::hopping(m_index.to_orbital(x, y),
+                                               m_index.to_orbital(next_x, y),
+                                               Operator::Spin::Down);
 
         // Vertical hopping
         size_t next_y = (y + 1) % m_index.height();
         m_hamiltonian +=
-            m_t * Expression::hopping(m_index.to_orbital(x, y),
-                                      m_index.to_orbital(x, next_y),
-                                      Operator::Spin::Up);
+            m_t * Expression::Fermion::hopping(m_index.to_orbital(x, y),
+                                               m_index.to_orbital(x, next_y),
+                                               Operator::Spin::Up);
         m_hamiltonian +=
-            m_t * Expression::hopping(m_index.to_orbital(x, y),
-                                      m_index.to_orbital(x, next_y),
-                                      Operator::Spin::Down);
+            m_t * Expression::Fermion::hopping(m_index.to_orbital(x, y),
+                                               m_index.to_orbital(x, next_y),
+                                               Operator::Spin::Down);
       }
     }
   }
@@ -104,7 +104,8 @@ static Expression fourier_transform_operator_2d(const Operator& op,
           std::exp(coefficient) /
           std::sqrt(static_cast<float>(lattice.width() * lattice.height()));
 
-      Operator transformed_op(op.type(), op.spin(), lattice.to_orbital(kx, ky));
+      Operator transformed_op = Operator::Fermion::make(
+          op.type(), op.spin(), lattice.to_orbital(kx, ky));
       result += Term(coefficient, {transformed_op});
     }
   }

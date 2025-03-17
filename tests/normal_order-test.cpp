@@ -13,10 +13,10 @@ class NormalOrderTest : public ::testing::Test {
 
   // Helper function to create operators
   static Operator c(Operator::Spin spin, uint8_t orbital) {
-    return Operator::creation(spin, orbital);
+    return Operator::Fermion::creation(spin, orbital);
   }
   static Operator a(Operator::Spin spin, uint8_t orbital) {
-    return Operator::annihilation(spin, orbital);
+    return Operator::Fermion::annihilation(spin, orbital);
   }
 };
 
@@ -49,14 +49,14 @@ TEST_F(NormalOrderTest, TwoCommutingOperatorsOutOfOrder) {
 
 TEST_F(NormalOrderTest, TwoCommutingMixedOperatorsOutOfOrder) {
   Term term({Operator::Fermion::creation(Operator::Spin::Down, 1),
-             Operator::Boson::creation(Operator::Spin::Up, 0)});
+             Operator::Boson::creation(0)});
   Expression result = orderer.normal_order(term);
   EXPECT_EQ(result.size(), 1);
   EXPECT_EQ(result.terms().begin()->second, Term::coefficient_type(1.0f, 0.0f));
   EXPECT_EQ(result.terms().begin()->first,
             Term::container_type(
                 {Operator::Fermion::creation(Operator::Spin::Down, 1),
-                 Operator::Boson::creation(Operator::Spin::Up, 0)}));
+                 Operator::Boson::creation(0)}));
 }
 
 TEST_F(NormalOrderTest, TwoNonCommutingOperators) {
@@ -91,17 +91,15 @@ TEST_F(NormalOrderTest, TwoNonCommutingFermionicOperators) {
 }
 
 TEST_F(NormalOrderTest, TwoNonCommutingBosonicOperators) {
-  Term term({Operator::Boson::annihilation(Operator::Spin::Up, 0),
-             Operator::Boson::creation(Operator::Spin::Up, 0)});
+  Term term({Operator::Boson::annihilation(0), Operator::Boson::creation(0)});
   Expression result = orderer.normal_order(term);
   EXPECT_EQ(result.size(), 2);
 
   auto it = result.terms().begin();
   EXPECT_EQ(it->second, Term::coefficient_type(1.0f, 0.0f));
   EXPECT_EQ(it->first,
-            Term::container_type(
-                {Operator::Boson::creation(Operator::Spin::Up, 0),
-                 Operator::Boson::annihilation(Operator::Spin::Up, 0)}));
+            Term::container_type({Operator::Boson::creation(0),
+                                  Operator::Boson::annihilation(0)}));
   ++it;
   EXPECT_EQ(it->second, Term::coefficient_type(1.0f, 0.0f));
   EXPECT_EQ(it->first, Term::container_type());

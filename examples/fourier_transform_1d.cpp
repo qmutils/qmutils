@@ -26,8 +26,10 @@ class TightBindingModel1D {
   void construct_hamiltonian() {
     for (size_t i = 0; i < m_size; ++i) {
       size_t j = (i + 1) % m_size;  // Periodic boundary conditions
-      m_hamiltonian += Expression::hopping(i, j, Operator::Spin::Up) * m_t;
-      m_hamiltonian += Expression::hopping(i, j, Operator::Spin::Down) * m_t;
+      m_hamiltonian +=
+          Expression::Fermion::hopping(i, j, Operator::Spin::Up) * m_t;
+      m_hamiltonian +=
+          Expression::Fermion::hopping(i, j, Operator::Spin::Down) * m_t;
     }
   }
 };
@@ -44,7 +46,7 @@ static Expression fourier_transform_operator(const Operator& op, size_t size) {
         0.0f, -type_sign * factor * static_cast<float>(k * op.orbital()));
     coefficient = std::exp(coefficient) / std::sqrt(static_cast<float>(size));
 
-    Operator transformed_op(op.type(), op.spin(), k);
+    Operator transformed_op = Operator::Fermion::make(op.type(), op.spin(), k);
     result += Term(coefficient, {transformed_op});
   }
 

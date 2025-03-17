@@ -7,18 +7,18 @@ namespace {
 
 class ExpressionTest : public ::testing::Test {
  protected:
-  Operator op1 = Operator::creation(Operator::Spin::Up, 0);
-  Operator op2 = Operator::annihilation(Operator::Spin::Down, 1);
-  Operator op3 = Operator::creation(Operator::Spin::Up, 2);
+  Operator op1 = Operator::Fermion::creation(Operator::Spin::Up, 0);
+  Operator op2 = Operator::Fermion::annihilation(Operator::Spin::Down, 1);
+  Operator op3 = Operator::Fermion::creation(Operator::Spin::Up, 2);
   Expression::coefficient_type coeff1{1.0f, 0.0f};
   Expression::coefficient_type coeff2{0.0f, 2.0f};
 
   static Operator c(Operator::Spin spin, uint8_t orbital) {
-    return Operator::creation(spin, orbital);
+    return Operator::Fermion::creation(spin, orbital);
   }
 
   static Operator a(Operator::Spin spin, uint8_t orbital) {
-    return Operator::annihilation(spin, orbital);
+    return Operator::Fermion::annihilation(spin, orbital);
   }
 };
 
@@ -94,7 +94,7 @@ TEST_F(ExpressionTest, ToString) {
   expr += Term(coeff1, {op1, op2});
   expr += Term(coeff2, {op2, op3});
   // Not necessarily ordered
-  std::string expected = "(0,2) c(↓,1)c+(↑,2) + (1,0) c+(↑,0)c(↓,1)";
+  std::string expected = "(0,2) f(↓,1)f+(↑,2) + (1,0) f+(↑,0)f(↓,1)";
   EXPECT_EQ(expr.to_string(), expected);
 }
 
@@ -245,26 +245,24 @@ TEST_F(ExpressionTest, ExpressionIsPurely) {
   fermion_expr += Term({0.0f, 1.0f},
                        {Operator::Fermion::creation(Operator::Spin::Down, 2)});
 
-  EXPECT_TRUE(fermion_expr.is_purely(Operator::Statistics::Fermionic));
+  EXPECT_TRUE(fermion_expr.is_purely(Operator::Statistics::Fermion));
 
   Expression boson_expr;
-  boson_expr += Term({1.0f, 0.0f},
-                     {Operator::Boson::creation(Operator::Spin::Up, 0),
-                      Operator::Boson::annihilation(Operator::Spin::Down, 1)});
-  boson_expr +=
-      Term({0.0f, 1.0f}, {Operator::Boson::creation(Operator::Spin::Down, 2)});
+  boson_expr += Term({1.0f, 0.0f}, {Operator::Boson::creation(0),
+                                    Operator::Boson::annihilation(1)});
+  boson_expr += Term({0.0f, 1.0f}, {Operator::Boson::creation(2)});
 
-  EXPECT_TRUE(boson_expr.is_purely(Operator::Statistics::Bosonic));
+  EXPECT_TRUE(boson_expr.is_purely(Operator::Statistics::Boson));
 
   Expression mixed_expr;
-  mixed_expr += Term({1.0f, 0.0f},
-                     {Operator::Fermion::creation(Operator::Spin::Up, 0),
-                      Operator::Boson::annihilation(Operator::Spin::Down, 1)});
+  mixed_expr +=
+      Term({1.0f, 0.0f}, {Operator::Fermion::creation(Operator::Spin::Up, 0),
+                          Operator::Boson::annihilation(1)});
   mixed_expr += Term({0.0f, 1.0f},
                      {Operator::Fermion::creation(Operator::Spin::Down, 2)});
 
-  EXPECT_FALSE(mixed_expr.is_purely(Operator::Statistics::Fermionic));
-  EXPECT_FALSE(mixed_expr.is_purely(Operator::Statistics::Bosonic));
+  EXPECT_FALSE(mixed_expr.is_purely(Operator::Statistics::Fermion));
+  EXPECT_FALSE(mixed_expr.is_purely(Operator::Statistics::Boson));
 }
 
 }  // namespace

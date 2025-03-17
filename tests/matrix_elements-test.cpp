@@ -12,11 +12,11 @@ namespace {
 
 class FermionicOperatorMatrixElementsTest : public ::testing::Test {
  protected:
-  static Operator c(Operator::Spin spin, uint8_t orbital) {
+  static Operator c(Operator::Spin spin, Operator::int_type orbital) {
     return Operator::Fermion::creation(spin, orbital);
   }
 
-  static Operator a(Operator::Spin spin, uint8_t orbital) {
+  static Operator a(Operator::Spin spin, Operator::int_type orbital) {
     return Operator::Fermion::annihilation(spin, orbital);
   }
 };
@@ -104,12 +104,12 @@ TEST_F(FermionicOperatorMatrixElementsTest,
 
 class BosonicOperatorMatrixElementsTest : public ::testing::Test {
  protected:
-  static Operator c(Operator::Spin spin, uint8_t orbital) {
-    return Operator::Boson::creation(spin, orbital);
+  static Operator c(Operator::int_type orbital) {
+    return Operator::Boson::creation(orbital);
   }
 
-  static Operator a(Operator::Spin spin, uint8_t orbital) {
-    return Operator::Boson::annihilation(spin, orbital);
+  static Operator a(Operator::int_type orbital) {
+    return Operator::Boson::annihilation(orbital);
   }
 };
 
@@ -117,8 +117,7 @@ TEST_F(BosonicOperatorMatrixElementsTest,
        SparseMatrixComputationOffUpperDiagonal) {
   BosonicBasis basis(2, 1);
 
-  Expression H = Expression(
-      Term(1.0f, {c(Operator::Spin::Up, 0), a(Operator::Spin::Up, 1)}));
+  Expression H = Expression(Term(1.0f, {c(0), a(1)}));
 
   auto matrix = compute_matrix_elements_serial<
       SparseMatrix<Expression::coefficient_type>>(basis, H);
@@ -135,8 +134,7 @@ TEST_F(BosonicOperatorMatrixElementsTest,
        SparseMatrixComputationOffLowerDiagonal) {
   BosonicBasis basis(2, 1);
 
-  Expression H = Expression(
-      Term(1.0f, {c(Operator::Spin::Up, 1), a(Operator::Spin::Up, 0)}));
+  Expression H = Expression(Term(1.0f, {c(1), a(0)}));
 
   auto matrix = compute_matrix_elements_serial<
       SparseMatrix<Expression::coefficient_type>>(basis, H);
@@ -153,10 +151,8 @@ TEST_F(BosonicOperatorMatrixElementsTest, SparseMatrixComputationOffDiagonal) {
   BosonicBasis basis(2, 1);
 
   Expression H;
-  H += Expression(
-      Term(1.0f, {c(Operator::Spin::Up, 1), a(Operator::Spin::Up, 0)}));
-  H += Expression(
-      Term(1.0f, {c(Operator::Spin::Up, 0), a(Operator::Spin::Up, 1)}));
+  H += Expression(Term(1.0f, {c(1), a(0)}));
+  H += Expression(Term(1.0f, {c(0), a(1)}));
 
   auto matrix = compute_matrix_elements_serial<
       SparseMatrix<Expression::coefficient_type>>(basis, H);
@@ -173,9 +169,7 @@ TEST_F(BosonicOperatorMatrixElementsTest,
        SparseMatrixComputationOffUpperDiagonalTwoBody) {
   BosonicBasis basis(2, 2);
 
-  Expression H = Expression(
-      Term(2.0f, {c(Operator::Spin::Up, 0), c(Operator::Spin::Up, 0),
-                  a(Operator::Spin::Up, 0), a(Operator::Spin::Up, 1)}));
+  Expression H = Expression(Term(2.0f, {c(0), c(0), a(0), a(1)}));
 
   auto matrix = compute_matrix_elements_serial<
       SparseMatrix<Expression::coefficient_type>>(basis, H);

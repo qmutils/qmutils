@@ -16,10 +16,6 @@ Expression NormalOrderer::normal_order(const Expression& expr) {
   return result;
 }
 
-static constexpr size_t phase_factor(const Operator& a, const Operator& b) {
-  return Operator::is_fermion(a) && Operator::is_fermion(b);
-}
-
 static constexpr int phase_to_sign(size_t phase) { return 1 - 2 * (phase & 1); }
 
 Expression NormalOrderer::normal_order_recursive(const operators_type& ops) {
@@ -47,8 +43,8 @@ Expression NormalOrderer::normal_order_recursive(const operators_type& ops,
   for (size_t i = 1; i < local_ops.size(); ++i) {
     size_t j = i;
     while (j > 0 && local_ops[j] < local_ops[j - 1]) {
-      size_t local_phase = phase_factor(local_ops[j], local_ops[j - 1]);
-      if (local_ops[j].commutes_with(local_ops[j - 1])) {
+      size_t local_phase = Operator::parity(local_ops[j], local_ops[j - 1]);
+      if (local_ops[j].commutes(local_ops[j - 1])) {
         std::swap(local_ops[j], local_ops[j - 1]);
         global_phase ^= local_phase;
         --j;

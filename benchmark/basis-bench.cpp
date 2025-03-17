@@ -31,7 +31,8 @@ static void BM_BasisContains(benchmark::State& state) {
   // Create a state that's guaranteed to be in the basis
   Basis::operators_type test_state;
   for (size_t i = 0; i < particles; ++i) {
-    test_state.push_back(Operator::creation(Operator::Spin::Up, i % orbitals));
+    test_state.push_back(
+        Operator::Fermion::creation(Operator::Spin::Up, i % orbitals));
   }
 
   for (auto _ : state) {
@@ -72,7 +73,7 @@ Term::container_type generate_valid_operators(size_t orbitals,
   while (operators.size() < particles) {
     Operator::Spin spin = static_cast<Operator::Spin>(spin_dist(gen));
     uint8_t orbital = static_cast<uint8_t>(orbital_dist(gen));
-    Operator op = Operator::creation(spin, orbital);
+    Operator op = Operator::Fermion::creation(spin, orbital);
 
     if (std::find(operators.begin(), operators.end(), op) == operators.end()) {
       operators.push_back(op);

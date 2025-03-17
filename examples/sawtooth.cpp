@@ -68,7 +68,7 @@ class SawtoothModel {
       m_hopping_hamiltonian +=
           m_t2 * Expression::Boson::hopping(A_site, next_A_site, s);
 
-      Vec2 displacement = Vec2{1, 0} * i;
+      Vec2 displacement = Vec2{1, 0} * static_cast<float>(i);
       m_position[A_site] = Vec2{0, 0} + displacement;
       m_position[B_site] = Vec2{0.5f, std::sqrt(2.0f)} + displacement;
     }
@@ -177,7 +177,7 @@ void run_projected_simulation(
 
   for (size_t i = 0; i < basis.size(); i++) {
     if (eigenvalues[count_flat_band_state] <
-        basis.particles() * single_flat_band_energy + tol) {
+        static_cast<float>(basis.particles()) * single_flat_band_energy + tol) {
       ++count_flat_band_state;
     }
   }

@@ -89,7 +89,8 @@ class KagomeModel {
 
         // Build position
         Vec2 displacement =
-            Vec2{1, 0} * i + Vec2{0.5f, 0.5f * std::sqrt(3.0f)} * j;
+            Vec2{1, 0} * static_cast<float>(i) +
+            Vec2{0.5f, 0.5f * std::sqrt(3.0f)} * static_cast<float>(j);
         m_position[A_site] = Vec2{0, 0} + displacement;
         m_position[B_site] = Vec2{0.5f, 0} + displacement;
         m_position[C_site] =
@@ -138,17 +139,17 @@ class KagomeModel {
   Expression v(size_t i, size_t j) const {
     auto s = Operator::Spin::Up;
 
-    size_t A_site = m_index.to_orbital(i, j, 0);
+    // size_t A_site = m_index.to_orbital(i, j, 0);
     size_t B_site = m_index.to_orbital(i, j, 1);
     size_t C_site = m_index.to_orbital(i, j, 2);
 
     size_t next_A_site_x = m_index.to_orbital((i + 1) % Lx, j, 0);
-    size_t next_B_site_x = m_index.to_orbital((i + 1) % Lx, j, 1);
+    // size_t next_B_site_x = m_index.to_orbital((i + 1) % Lx, j, 1);
     size_t next_C_site_x = m_index.to_orbital((i + 1) % Lx, j, 2);
 
     size_t next_A_site_y = m_index.to_orbital(i, (j + 1) % Ly, 0);
     size_t next_B_site_y = m_index.to_orbital(i, (j + 1) % Ly, 1);
-    size_t next_C_site_y = m_index.to_orbital(i, (j + 1) % Ly, 2);
+    // size_t next_C_site_y = m_index.to_orbital(i, (j + 1) % Ly, 2);
 
     Expression result;
 
@@ -170,7 +171,7 @@ class KagomeModel {
     for (size_t i = 0; i < Lx; i++) {
       size_t A_site = m_index.to_orbital(i, j, 0);
       size_t B_site = m_index.to_orbital(i, j, 1);
-      size_t C_site = m_index.to_orbital(i, j, 2);
+      // size_t C_site = m_index.to_orbital(i, j, 2);
 
       result += Term::Boson::creation(s, A_site);
       result -= Term::Boson::creation(s, B_site);
@@ -186,7 +187,7 @@ class KagomeModel {
 
     for (size_t j = 0; j < Ly; j++) {
       size_t A_site = m_index.to_orbital(i, j, 0);
-      size_t B_site = m_index.to_orbital(i, j, 1);
+      // size_t B_site = m_index.to_orbital(i, j, 1);
       size_t C_site = m_index.to_orbital(i, j, 2);
 
       result += Term::Boson::creation(s, A_site);

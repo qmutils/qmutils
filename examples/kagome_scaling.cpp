@@ -103,10 +103,10 @@ class Cluster {
     m_clusters.push_back(current_cluster);
   }
 
-  int size() const { return m_clusters.size(); }
+  size_t size() const { return m_clusters.size(); }
 
-  std::vector<int> cluster_sizes() const {
-    std::vector<int> sizes;
+  std::vector<size_t> cluster_sizes() const {
+    std::vector<size_t> sizes;
     sizes.reserve(m_clusters.size());
     for (const auto& cluster : m_clusters) {
       sizes.push_back(cluster.size());
@@ -117,7 +117,8 @@ class Cluster {
   const std::vector<std::vector<float>>& clusters() const { return m_clusters; }
 };
 
-float compute_bandwidth(const std::vector<float>& cluster) {
+[[maybe_unused]] static float compute_bandwidth(
+    const std::vector<float>& cluster) {
   if (cluster.empty()) {
     return 0;
   }
@@ -133,9 +134,11 @@ float compute_bandwidth(const std::vector<float>& cluster) {
   return max_val - min_val;
 }
 
-float ener(float t, size_t i, size_t j, size_t lx, size_t ly) {
-  float kx = 2.0f * std::numbers::pi_v<float> * i / lx;
-  float ky = 2.0f * std::numbers::pi_v<float> * j / ly;
+static float ener(float t, size_t i, size_t j, size_t lx, size_t ly) {
+  float kx = 2.0f * std::numbers::pi_v<float> * static_cast<float>(i) /
+             static_cast<float>(lx);
+  float ky = 2.0f * std::numbers::pi_v<float> * static_cast<float>(j) /
+             static_cast<float>(ly);
   return t - t * std::sqrt(3.0f + 2.0f * std::cos(kx) + 2.0f * std::cos(ky) +
                            2.0f * std::cos(kx - ky));
 }
